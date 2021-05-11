@@ -29,7 +29,7 @@ class App extends React.Component {
                         fetch('http://localhost:8080/uploadHtml', {
                             method: 'post',
                             body: JSON.stringify({ data: result.value }),
-                            headers: { "Content-type": "applicatio/json" }
+                            headers: { "Content-type": "application/json" }
                         })
                     })
                     .catch((a) => {
