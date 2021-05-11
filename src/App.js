@@ -31,6 +31,11 @@ class App extends React.Component {
                             body: JSON.stringify({ data: result.value }),
                             headers: { "Content-type": "application/json" }
                         })
+                            .then(res => {
+                                if (res.ok) {
+                                    alert("Uploaded Successfully")
+                                }
+                            })
                     })
                     .catch((a) => {
                         console.log('alexei: something went wrong', a);
@@ -42,6 +47,10 @@ class App extends React.Component {
 
     setFileState = (file) => {
         this.setState({ files: file[0] })
+    }
+
+    handleDelete = () => {
+        this.setState({ files: [] })
     }
 
     render() {
@@ -60,6 +69,7 @@ class App extends React.Component {
                     acceptedFiles={[".docx"]}
                     showFileNames
                     maxFileSize={20000000}
+                    onDelete={this.handleDelete}
                 />
                 <Button onClick={this.handleUpload} style={{ marginTop: '1%' }} fullWidth variant="contained" color="secondary">Upload</Button>
             </div>
