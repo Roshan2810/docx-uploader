@@ -26,7 +26,7 @@ class App extends React.Component {
                     { includeDefaultStyleMap: true },
                 )
                     .then((result) => {
-                        fetch('http://localhost:8080', {
+                        fetch('http://localhost:8080/uploadHtml', {
                             method: 'post',
                             body: JSON.stringify({ data: result.value }),
                             headers: { "Content-type": "applicatio/json" }
