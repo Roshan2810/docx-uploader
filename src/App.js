@@ -8,8 +8,38 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            files: []
+            files: [],
+            statusCode: 0
         }
+    }
+
+    componentDidUpdate(prevProps) {
+
+        if (this.state.statusCode === 200) {
+            fetch('http://localhost:8080/getDocx', {
+                method: 'get'
+            })
+                .then(res => {
+                    this.setState({ statusCode: 0 })
+                    res.blob().then(blob => this.downloadConvertedDocx(blob))
+                })
+                .catch(err => {
+                    this.setState({ statusCode: 0 })
+                    console.log(err)
+                })
+        }
+    }
+
+    downloadConvertedDocx = (blob) => {
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url
+        a.download = "Test.docx"
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     }
 
     handleUpload = () => {
@@ -33,6 +63,7 @@ class App extends React.Component {
                         })
                             .then(res => {
                                 if (res.ok) {
+                                    this.setState({ statusCode: res.status })
                                     alert("Uploaded Successfully")
                                 }
                             })
