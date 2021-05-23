@@ -1,111 +1,112 @@
-import React from 'react';
-import { DropzoneArea } from 'material-ui-dropzone';
-import { Button, Typography } from '@material-ui/core';
-import mammoth from 'mammoth';
+import { Button, Grid, TextField, Typography } from '@material-ui/core';
+import { useState } from 'react';
+
+const style = {
+    marginTop: '10vh',
+    textAlign: 'center',
+}
+
+const btnStyle = {
+    marginTop: '1%'
+}
+
+const textFieldStyle = {
+    margin: '1%'
+}
 
 
-class App extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            files: [],
-            statusCode: 0
-        }
-    }
+const App = () => {
 
-    componentDidUpdate(prevProps) {
+    const [textFieldValue, setTextFieldValue] = useState({
+        fname: "",
+        jobId: "",
+        authToken: ""
+    });
 
-        if (this.state.statusCode === 200) {
-            fetch('http://localhost:8080/getDocx', {
-                method: 'get'
+    const makeDownloadDocxAPICall = () => {
+        fetch('http://localhost:3001/download-docx', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                fname: textFieldValue.fname,
+                jobId: textFieldValue.jobId,
+                authToken: textFieldValue.authToken
             })
-                .then(res => {
-                    this.setState({ statusCode: 0 })
-                    res.blob().then(blob => this.downloadConvertedDocx(blob))
-                })
-                .catch(err => {
-                    this.setState({ statusCode: 0 })
-                    console.log(err)
-                })
-        }
-    }
+        })
+            .then(async res => {
+                if (res.ok) {
+                    res.blob().then(data => {
+                        let url = URL.createObjectURL(data);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute(
+                            'download',
+                            textFieldValue.fname,
+                        );
 
-    downloadConvertedDocx = (blob) => {
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url
-        a.download = "Test.docx"
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }
+                        // Append to html link element page
+                        document.body.appendChild(link);
 
-    handleUpload = () => {
-        const jsonFile = new XMLHttpRequest();
-        const blobUrl = URL.createObjectURL(this.state.files);
+                        // Start download
+                        link.click();
 
-        jsonFile.open('GET', blobUrl, true);
-        jsonFile.send();
-        jsonFile.responseType = 'arraybuffer';
-        jsonFile.onreadystatechange = () => {
-            if (jsonFile.readyState === 4 && jsonFile.status === 200) {
-                mammoth.convertToHtml(
-                    { arrayBuffer: jsonFile.response },
-                    { includeDefaultStyleMap: true },
-                )
-                    .then((result) => {
-                        fetch('http://localhost:8080/uploadHtml', {
-                            method: 'post',
-                            body: JSON.stringify({ data: result.value }),
-                            headers: { "Content-type": "application/json" }
-                        })
-                            .then(res => {
-                                if (res.ok) {
-                                    this.setState({ statusCode: res.status })
-                                    alert("Uploaded Successfully")
-                                }
-                            })
+                        // Clean up and remove the link
+                        link.parentNode.removeChild(link);
                     })
-                    .catch((a) => {
-                        console.log('alexei: something went wrong', a);
-                    })
-                    .done();
-            }
-        };
+                }
+            })
     }
-
-    setFileState = (file) => {
-        this.setState({ files: file[0] })
-    }
-
-    handleDelete = () => {
-        this.setState({ files: [] })
-    }
-
-    render() {
-        const divStyle = {
-            width: '50%',
-            position: 'absolute',
-            top: '25%',
-            left: "25%",
-            textAlign: 'center'
-        }
-        return (
-            <div style={divStyle}>
-                <Typography variant="h2">DOCX Uploader POC</Typography>
-                <DropzoneArea
-                    onChange={this.setFileState}
-                    acceptedFiles={[".docx"]}
-                    showFileNames
-                    maxFileSize={20000000}
-                    onDelete={this.handleDelete}
-                />
-                <Button onClick={this.handleUpload} style={{ marginTop: '1%' }} fullWidth variant="contained" color="secondary">Upload</Button>
+    return (
+        <div style={style}>
+            <Typography variant="h2">Download DOCX</Typography>
+            <Grid container>
+                <Grid item xs={12} sm={12} xl={12} lg={12}>
+                    <TextField
+                        style={textFieldStyle}
+                        placeholder="FileName"
+                        variant="outlined"
+                        value={textFieldValue.fname}
+                        onChange={e => {
+                            setTextFieldValue(prevState => ({ ...prevState, fname: e.target.value }))
+                        }}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={12} xl={12} lg={12}>
+                    <TextField
+                        style={textFieldStyle}
+                        placeholder="JobId"
+                        variant="outlined"
+                        value={textFieldValue.jobId}
+                        onChange={e => {
+                            setTextFieldValue(prevState => ({ ...prevState, jobId: e.target.value }))
+                        }}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={12} xl={12} lg={12}>
+                    <TextField
+                        style={textFieldStyle}
+                        placeholder="auth-token"
+                        variant="outlined"
+                        value={textFieldValue.authToken}
+                        onChange={e => {
+                            setTextFieldValue(prevState => ({ ...prevState, authToken: e.target.value }))
+                        }}
+                    />
+                </Grid>
+            </Grid>
+            <div style={btnStyle}>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={makeDownloadDocxAPICall}
+                >
+                    Download DOCX
+                </Button>
             </div>
-        )
-    }
+        </div >
+    );
 }
 
 export default App;
